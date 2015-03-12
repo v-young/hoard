@@ -11,6 +11,11 @@ android {
         targetSdkVersion 21
         versionCode 1
         versionName "1.0"
+
+        Properties props = new Properties()
+        props.load(new FileInputStream("secrets.properties"))
+        buildConfigField "String", "PARSE_APPLICATION_ID", "\"" + props.getProperty("parse.applicationId") + "\""
+        buildConfigField "String", "PARSE_CLIENT_KEY", "\"" + props.getProperty("parse.clientKey") + "\""
     }
     buildTypes {
         release {
