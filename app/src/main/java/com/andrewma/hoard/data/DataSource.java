@@ -8,6 +8,8 @@ public interface DataSource {
 
     public List<Device> findDevicesByUser(String email);
 
+    public List<Device> getAllDevices();
+
     public void addDevice(Device device);
 
     public void updateDeviceMetadata(Device device);

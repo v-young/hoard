@@ -7,6 +7,7 @@ import com.parse.ParseObject;
 import com.parse.ParseQuery;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class ParseDataSource implements DataSource {
@@ -40,6 +41,24 @@ public class ParseDataSource implements DataSource {
         }
     }
 
+    @Override
+    public List<Device> getAllDevices() {
+        final ParseQuery<ParseObject> query = ParseQuery.getQuery(DEVICES_CLASS_NAME);
+        try {
+            final List<ParseObject> parseDevices = query.find();
+            if(parseDevices.size() == 0) {
+                return null;
+            }
+            final List<Device> devices = new ArrayList<>();
+            for(ParseObject parseDevice : parseDevices) {
+                devices.add(parseDeviceObject(parseDevice));
+            }
+            return devices;
+        } catch (ParseException e) {
+            return null;
+        }
+    }
+
     public void addDevice(Device device) {
         final ParseObject parseDevice = new ParseObject(DEVICES_CLASS_NAME);
         parseDevice.put(DEVICES_SERIAL, device.serial);
@@ -52,7 +71,7 @@ public class ParseDataSource implements DataSource {
         device.serial = parseDevice.getString(DEVICES_SERIAL);
         device.name = parseDevice.getString(DEVICES_NAME);
         device.checkedOutTo = parseDevice.getString(DEVICES_CHECKED_OUT_TO);
-        device.checkedOutAt = parseDevice.getDate("checkedOutAt");
+        device.checkedOutAt = parseDevice.getDate(DEVICES_CHECKED_OUT_AT);
         return device;
     }
 
@@ -84,6 +103,7 @@ public class ParseDataSource implements DataSource {
     public void checkout(String serial, String email) {
         final ParseObject parseDevice = findParseDeviceById(serial);
         parseDevice.put(DEVICES_CHECKED_OUT_TO, email);
+        parseDevice.put(DEVICES_CHECKED_OUT_AT, new Date());
         parseDevice.saveEventually();
     }
 
@@ -91,6 +111,7 @@ public class ParseDataSource implements DataSource {
     public void checkin(String serial) {
         final ParseObject parseDevice = findParseDeviceById(serial);
         parseDevice.put(DEVICES_CHECKED_OUT_TO, null);
+        parseDevice.put(DEVICES_CHECKED_OUT_AT, null);
         parseDevice.saveEventually();
     }
 }
