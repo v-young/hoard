@@ -28,6 +28,9 @@ android {
 dependencies {
     compile 'com.android.support:appcompat-v7:21.0.3'
 
+    // Butterknife
+    compile 'com.jakewharton:butterknife:6.1.0'
+
     // LoganSquared
     apt 'com.bluelinelabs:logansquare-compiler:1.0.6'
     compile 'com.bluelinelabs:logansquare:1.0.6'
