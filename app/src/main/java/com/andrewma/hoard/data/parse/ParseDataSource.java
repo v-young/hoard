@@ -1,5 +1,7 @@
 package com.andrewma.hoard.data.parse;
 
+import android.util.Log;
+
 import com.andrewma.hoard.data.DataSource;
 import com.andrewma.hoard.data.Device;
 import com.parse.ParseException;
@@ -12,11 +14,13 @@ import java.util.List;
 
 public class ParseDataSource implements DataSource {
 
+    private static final String TAG = ParseDataSource.class.getSimpleName();
+
     private static final String DEVICES_CLASS_NAME = "Devices";
     private static final String DEVICES_CHECKED_OUT_TO = "checkedOutTo";
     private static final String DEVICES_CHECKED_OUT_AT = "checkedOutAt";
     private static final String DEVICES_SERIAL = "serial";
-    private static final String DEVICES_NAME = "name";
+    private static final String DEVICES_MODEL = "model";
 
     @Override
     public Device findDeviceById(String serial) {
@@ -37,6 +41,7 @@ public class ParseDataSource implements DataSource {
             }
             return parseDevices.get(0);
         } catch (ParseException e) {
+            Log.e(TAG, "Failure getting data", e);
             return null;
         }
     }
@@ -55,6 +60,7 @@ public class ParseDataSource implements DataSource {
             }
             return devices;
         } catch (ParseException e) {
+            Log.e(TAG, "Failure getting data", e);
             return null;
         }
     }
@@ -62,14 +68,18 @@ public class ParseDataSource implements DataSource {
     public void addDevice(Device device) {
         final ParseObject parseDevice = new ParseObject(DEVICES_CLASS_NAME);
         parseDevice.put(DEVICES_SERIAL, device.serial);
-        parseDevice.put(DEVICES_NAME, device.name);
-        parseDevice.saveInBackground();
+        parseDevice.put(DEVICES_MODEL, device.model);
+        try {
+            parseDevice.save();
+        } catch (ParseException e) {
+            Log.e(TAG, "Failure saving data", e);
+        }
     }
 
     private Device parseDeviceObject(ParseObject parseDevice) {
         final Device device = new Device();
         device.serial = parseDevice.getString(DEVICES_SERIAL);
-        device.name = parseDevice.getString(DEVICES_NAME);
+        device.model = parseDevice.getString(DEVICES_MODEL);
         device.checkedOutTo = parseDevice.getString(DEVICES_CHECKED_OUT_TO);
         device.checkedOutAt = parseDevice.getDate(DEVICES_CHECKED_OUT_AT);
         return device;
@@ -90,6 +100,7 @@ public class ParseDataSource implements DataSource {
             }
             return devices;
         } catch (ParseException e) {
+            Log.e(TAG, "Failure getting data", e);
             return null;
         }
     }
@@ -110,8 +121,8 @@ public class ParseDataSource implements DataSource {
     @Override
     public void checkin(String serial) {
         final ParseObject parseDevice = findParseDeviceById(serial);
-        parseDevice.put(DEVICES_CHECKED_OUT_TO, null);
-        parseDevice.put(DEVICES_CHECKED_OUT_AT, null);
+        parseDevice.remove(DEVICES_CHECKED_OUT_TO);
+        parseDevice.remove(DEVICES_CHECKED_OUT_AT);
         parseDevice.saveEventually();
     }
 }

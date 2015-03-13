@@ -7,7 +7,7 @@ import com.bluelinelabs.logansquare.annotation.JsonObject;
 public class DeviceTag {
 
     @JsonField
-    public String name;
+    public String model;
 
     @JsonField
     public String serial;

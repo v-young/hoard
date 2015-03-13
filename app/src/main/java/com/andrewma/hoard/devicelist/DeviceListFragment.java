@@ -34,8 +34,7 @@ public class DeviceListFragment extends ListFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        DeviceListLoader task = new DeviceListLoader();
-        task.execute();
+        new DeviceListLoader().execute();
     }
 
 

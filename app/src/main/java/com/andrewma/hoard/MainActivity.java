@@ -13,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.andrewma.hoard.devicelist.DeviceListFragment;
+import com.andrewma.hoard.scan.ScanFragment;
 
 
 public class MainActivity extends ActionBarActivity
@@ -51,6 +52,9 @@ public class MainActivity extends ActionBarActivity
 
         final Fragment fragment;
         switch(position) {
+            case 0:
+                fragment = new ScanFragment();
+                break;
             case 1:
                 fragment = new DeviceListFragment();
                 break;

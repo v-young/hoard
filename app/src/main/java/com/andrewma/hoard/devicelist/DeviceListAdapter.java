@@ -34,7 +34,7 @@ class DeviceListAdapter extends ArrayAdapter<Device> {
         final TextView checkedOut = (TextView) rowView.findViewById(R.id.checkedOut);
 
         final Device device = mDevices.get(position);
-        name.setText(device.name);
+        name.setText(device.model);
         serial.setText(device.serial);
         checkedOut.setText(device.checkedOutTo);
 
