@@ -22,6 +22,12 @@ public class ParseDataSource implements DataSource {
     private static final String DEVICES_SERIAL = "serial";
     private static final String DEVICES_MODEL = "model";
 
+    private static final String AUDIT_CLASS_NAME = "Audit";
+    private static final String AUDIT_SERIAL = DEVICES_SERIAL;
+    private static final String AUDIT_CHECKED_OUT_TO = DEVICES_CHECKED_OUT_TO;
+    private static final String AUDIT_CHECKED_OUT_AT = DEVICES_CHECKED_OUT_AT;
+    private static final String AUDIT_CHECKED_IN_AT = "checkedInAt";
+
     @Override
     public Device findDeviceById(String serial) {
         final ParseObject parseDevice = findParseDeviceById(serial);
@@ -112,17 +118,28 @@ public class ParseDataSource implements DataSource {
 
     @Override
     public void checkout(String serial, String email) {
+        final Date checkoutDate = new Date();
+
         final ParseObject parseDevice = findParseDeviceById(serial);
         parseDevice.put(DEVICES_CHECKED_OUT_TO, email);
-        parseDevice.put(DEVICES_CHECKED_OUT_AT, new Date());
+        parseDevice.put(DEVICES_CHECKED_OUT_AT, checkoutDate);
         parseDevice.saveEventually();
     }
 
     @Override
     public void checkin(String serial) {
         final ParseObject parseDevice = findParseDeviceById(serial);
+        final String email = parseDevice.getString(DEVICES_CHECKED_OUT_TO);
+        final Date checkoutDate = parseDevice.getDate(DEVICES_CHECKED_OUT_AT);
         parseDevice.remove(DEVICES_CHECKED_OUT_TO);
         parseDevice.remove(DEVICES_CHECKED_OUT_AT);
         parseDevice.saveEventually();
+
+        final ParseObject parseAudit = new ParseObject(AUDIT_CLASS_NAME);
+        parseAudit.put(AUDIT_SERIAL, serial);
+        parseAudit.put(AUDIT_CHECKED_OUT_TO, email);
+        parseAudit.put(AUDIT_CHECKED_OUT_AT, checkoutDate);
+        parseAudit.put(AUDIT_CHECKED_IN_AT, new Date());
+        parseAudit.saveEventually();
     }
 }
