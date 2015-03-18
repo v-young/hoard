@@ -43,7 +43,6 @@ public class ScanFragment extends Fragment {
 
     private String mScannedDeviceModel;
     private String mScannedDeviceSerial;
-    private String mScannedUserEmail;
 
     public ScanFragment() {
         // Required empty public constructor
@@ -60,6 +59,10 @@ public class ScanFragment extends Fragment {
         return view;
     }
 
+    private String getScannedUserEmail() {
+        return mUserEmail.getText().toString().trim();
+    }
+
     @OnClick(R.id.scan_button)
     void scanButtonClick() {
         final Intent intent = new Intent("com.google.zxing.client.android.SCAN");
@@ -69,14 +72,14 @@ public class ScanFragment extends Fragment {
 
     @OnClick(R.id.checkout_button)
     void checkoutClick() {
-        if(TextUtils.isEmpty(mScannedUserEmail)) {
+        if(TextUtils.isEmpty(getScannedUserEmail())) {
             Toast.makeText(getActivity(), "Please type e-mail or scan a user tag", Toast.LENGTH_LONG).show();
             return;
         }
 
         if(!TextUtils.isEmpty(mScannedDeviceSerial)) {
             mCheckoutButton.setVisibility(View.GONE);
-            HoardApplication.getDataSource().checkout(mScannedDeviceSerial, mScannedUserEmail);
+            HoardApplication.getDataSource().checkout(mScannedDeviceSerial, getScannedUserEmail());
         }
     }
 
@@ -110,8 +113,7 @@ public class ScanFragment extends Fragment {
                             break;
                         case USER:
                             final UserTag user = LoganSquare.parse(contents, UserTag.class);
-                            mScannedUserEmail = user.email;
-                            mUserEmail.setText(mScannedUserEmail);
+                            mUserEmail.setText(user.email);
                             break;
                     }
                 } catch (IOException e) {
@@ -144,7 +146,6 @@ public class ScanFragment extends Fragment {
                 mCheckinButton.setVisibility(View.GONE);
             } else {
                 mUserEmail.setText(device.checkedOutTo);
-                mScannedUserEmail = device.checkedOutTo;
                 mCheckoutButton.setVisibility(View.GONE);
                 mCheckinButton.setVisibility(View.VISIBLE);
             }
