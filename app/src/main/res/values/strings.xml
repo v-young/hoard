@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Hoard</string>
 
-    <string name="title_section1">Section 1</string>
+    <string name="title_device_checkout">Device Checkout/In</string>
     <string name="title_device_list">Device List</string>
     <string name="title_section3">Section 3</string>
 

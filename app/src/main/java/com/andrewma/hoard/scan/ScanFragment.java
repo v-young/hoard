@@ -1,16 +1,27 @@
 package com.andrewma.hoard.scan;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.appcompat.BuildConfig;
+import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,6 +34,8 @@ import com.andrewma.hoard.tags.UserTag;
 import com.bluelinelabs.logansquare.LoganSquare;
 
 import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -40,14 +53,42 @@ public class ScanFragment extends Fragment {
     @InjectView(R.id.user) EditText mUserEmail;
     @InjectView(R.id.checkout_button) Button mCheckoutButton;
     @InjectView(R.id.checkin_button) Button mCheckinButton;
+    @InjectView(R.id.progress_bar) ProgressBar mProgressBar;
+    @InjectView(R.id.img_button_scan) ImageButton mScanButton;
+    @InjectView(R.id.this_device) Button mThisDeviceButton;
+    @InjectView(R.id.version) TextView mVersion;
 
     private String mScannedDeviceModel;
     private String mScannedDeviceSerial;
+    private String mScannedUserEmail;
 
     public ScanFragment() {
         // Required empty public constructor
     }
 
+    @Override
+    public void onCreate(Bundle savedBundle) {
+        super.onCreate(savedBundle);
+        setHasOptionsMenu(true);
+
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.menu_fragment_scan, menu);
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        switch (item.getItemId()) {
+            case R.id.action_bar_scan:
+                scanButtonClick();
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -56,6 +97,10 @@ public class ScanFragment extends Fragment {
         final View view = inflater.inflate(R.layout.fragment_scan, container, false);
         ButterKnife.inject(this, view);
 
+        getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
+
+        //mVersion.setText(BuildConfig.VERSION_CODE);
+
         return view;
     }
 
@@ -63,31 +108,79 @@ public class ScanFragment extends Fragment {
         return mUserEmail.getText().toString().trim();
     }
 
-    @OnClick(R.id.scan_button)
+    @OnClick(R.id.this_device)
+    void useThisDevice() {
+        String serial = Build.SERIAL;
+
+        //Toast.makeText(getActivity(), serial, Toast.LENGTH_LONG).show();
+        new GetDeviceTask().execute(serial);
+    }
+
+    @OnClick(R.id.img_button_scan)
     void scanButtonClick() {
         final Intent intent = new Intent("com.google.zxing.client.android.SCAN");
         intent.putExtra("SCAN_MODE", "QR_CODE_MODE");
         startActivityForResult(intent, SCANNER_REQUEST_CODE);
     }
 
-    @OnClick(R.id.checkout_button)
-    void checkoutClick() {
+    private boolean isEmailValid(String email)
+    {
+        String regExpn =
+                "^(([\\w-]+\\.)+[\\w-]+|([a-zA-Z]{1}|[\\w-]{2,}))@"
+                        +"((([0-1]?[0-9]{1,2}|25[0-5]|2[0-4][0-9])\\.([0-1]?"
+                        +"[0-9]{1,2}|25[0-5]|2[0-4][0-9])\\."
+                        +"([0-1]?[0-9]{1,2}|25[0-5]|2[0-4][0-9])\\.([0-1]?"
+                        +"[0-9]{1,2}|25[0-5]|2[0-4][0-9])){1}|"
+                        +"([a-zA-Z]+[\\w-]+\\.)+[a-zA-Z]{2,4})$";
+
+        CharSequence inputStr = email;
+
+        Pattern pattern = Pattern.compile(regExpn,Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(inputStr);
+
+        if(matcher.matches())
+            return true;
+        else
+            return false;
+    }
+
+    private boolean validateCheckout() {
         if(TextUtils.isEmpty(getScannedUserEmail())) {
             Toast.makeText(getActivity(), "Please type e-mail or scan a user tag", Toast.LENGTH_LONG).show();
+            return false;
+        }
+
+        if (!isEmailValid(getScannedUserEmail().toLowerCase())) {
+            Toast.makeText(getActivity(), "The user field should be a valid email address", Toast.LENGTH_LONG).show();
+            return false;
+        }
+
+        return true;
+    }
+
+    @OnClick(R.id.checkout_button)
+    void checkoutClick() {
+        if (!validateCheckout()) {
             return;
         }
 
         if(!TextUtils.isEmpty(mScannedDeviceSerial)) {
             mCheckoutButton.setVisibility(View.GONE);
-            HoardApplication.getDataSource().checkout(mScannedDeviceSerial, getScannedUserEmail());
+            mProgressBar.setVisibility(View.VISIBLE);
+
+            new CheckOutTask().execute(new Device(mScannedDeviceModel, mScannedDeviceSerial));
         }
     }
 
     @OnClick(R.id.checkin_button)
     void checkinClick() {
         if(!TextUtils.isEmpty(mScannedDeviceSerial)) {
-            mCheckoutButton.setVisibility(View.GONE);
-            HoardApplication.getDataSource().checkin(mScannedDeviceSerial);
+            mCheckoutButton.setVisibility(View.VISIBLE);
+            mCheckinButton.setVisibility(View.GONE);
+
+            mProgressBar.setVisibility(View.VISIBLE);
+
+            new CheckInTask().execute(new Device(mScannedDeviceModel, mScannedDeviceSerial));
         }
     }
 
@@ -98,6 +191,7 @@ public class ScanFragment extends Fragment {
             if (resultCode == Activity.RESULT_OK) {
                 // Handle successful scan
                 final String contents = intent.getStringExtra("SCAN_RESULT");
+                boolean updated = false;
 
                 try {
                     final Tag tag = LoganSquare.parse(contents, Tag.class);
@@ -110,12 +204,16 @@ public class ScanFragment extends Fragment {
                             mDeviceModelTextView.setText(mScannedDeviceModel);
                             mDeviceSerialTextView.setText(mScannedDeviceSerial);
                             new GetDeviceTask().execute(mScannedDeviceSerial);
+                            updated = true;
                             break;
                         case USER:
                             final UserTag user = LoganSquare.parse(contents, UserTag.class);
-                            mUserEmail.setText(user.email);
+                            mScannedUserEmail = user.email;
+                            mUserEmail.setText(mScannedUserEmail);
+                            updated = true;
                             break;
                     }
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -137,9 +235,17 @@ public class ScanFragment extends Fragment {
             if(device == null) {
                 Toast.makeText(getActivity(), "Device has not been registered. Adding to database", Toast.LENGTH_LONG).show();
                 mCheckoutButton.setEnabled(false);
+                mProgressBar.setVisibility(View.VISIBLE);
+
                 new AddDeviceTask().execute(new Device(mScannedDeviceModel, mScannedDeviceSerial));
                 return;
             }
+
+            // Override the value using the value from parse
+            mScannedDeviceModel = device.model;
+            mScannedDeviceSerial = device.serial;
+            mDeviceModelTextView.setText(mScannedDeviceModel);
+            mDeviceSerialTextView.setText(mScannedDeviceSerial);
 
             if(TextUtils.isEmpty(device.checkedOutTo)) {
                 mCheckoutButton.setVisibility(View.VISIBLE);
@@ -164,6 +270,44 @@ public class ScanFragment extends Fragment {
         protected void onPostExecute(Void aVoid) {
             mCheckoutButton.setVisibility(View.VISIBLE);
             mCheckinButton.setVisibility(View.GONE);
+
+            mProgressBar.setVisibility(View.GONE);
+        }
+    }
+
+    private class CheckOutTask extends AsyncTask<Device, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Device... device) {
+            HoardApplication.getDataSource().checkout(mScannedDeviceSerial, getScannedUserEmail());
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            Toast.makeText(getActivity(), "Device is checked out successfully!", Toast.LENGTH_SHORT).show();
+            mCheckoutButton.setVisibility(View.GONE);
+            mCheckinButton.setVisibility(View.VISIBLE);
+
+            mProgressBar.setVisibility(View.GONE);
+        }
+    }
+
+    private class CheckInTask extends AsyncTask<Device, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Device... device) {
+            HoardApplication.getDataSource().checkin(mScannedDeviceSerial);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            Toast.makeText(getActivity(), "Device is now checkd in!", Toast.LENGTH_SHORT).show();
+            mCheckoutButton.setVisibility(View.VISIBLE);
+            mCheckinButton.setVisibility(View.GONE);
+
+            mProgressBar.setVisibility(View.GONE);
         }
     }
 }

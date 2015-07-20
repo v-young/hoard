@@ -30,8 +30,14 @@ public class ParseDataSource implements DataSource {
 
     @Override
     public Device findDeviceById(String serial) {
-        final ParseObject parseDevice = findParseDeviceById(serial);
+        ParseObject parseDevice = findParseDeviceById(serial);
         if(parseDevice == null) {
+            parseDevice = findParseDeviceById(serial.toUpperCase());
+        }
+        if(parseDevice == null) {
+            parseDevice = findParseDeviceById(serial.toLowerCase());
+        }
+        if (parseDevice == null) {
             return null;
         }
         return parseDeviceObject(parseDevice);
