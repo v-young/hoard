@@ -9,8 +9,10 @@ import com.parse.ParseObject;
 import com.parse.ParseQuery;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+//import java.util.Collection;
 
 public class ParseDataSource implements DataSource {
 
@@ -148,4 +150,54 @@ public class ParseDataSource implements DataSource {
         parseAudit.put(AUDIT_CHECKED_IN_AT, new Date());
         parseAudit.saveEventually();
     }
+
+    //Retrieve all of the users from the Audit table.  This data will be used to populate the dropdown list on the scan page wiuth a list of users that have previously checked out devices.
+    public ArrayList<String> GetAllUsers()
+    {
+        ArrayList<String> outputList;
+        final ParseQuery<ParseObject> query = ParseQuery.getQuery(AUDIT_CLASS_NAME);
+        query.orderByAscending(AUDIT_CHECKED_OUT_AT);
+        query.selectKeys(Arrays.asList(AUDIT_CHECKED_OUT_TO));
+        try
+        {
+            final List<ParseObject> parseUsers = query.find();
+            if(parseUsers.size() == 0)
+            {
+                return null;
+            }
+            outputList = Dedupe(parseUsers);
+            if (outputList.size() == 0)
+            {
+                return null;
+            }
+        }
+        catch (ParseException e)
+            {
+                Log.e(TAG, "Failure getting data", e);
+                return null;
+            }
+        return outputList;
+    }
+
+
+    private ArrayList<String> Dedupe(List<ParseObject> inList)
+    {
+        ArrayList<String> allNames = new ArrayList<String>();
+        //Copy the unique items from the list
+        for(ParseObject po : inList)
+        {
+            if (po != null)
+            {
+                String inStr = po.getString(AUDIT_CHECKED_OUT_TO);
+                if (!allNames.contains(inStr))
+                {
+                    allNames.add(inStr);
+                }
+            }
+        }
+        return allNames;
+
+    }
+
+
 }

@@ -48,6 +48,8 @@ public class MainActivity extends ActionBarActivity
         } catch (Throwable t) {
             // WTF Samsung!
         }
+
+
     }
 
     @Override
