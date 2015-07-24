@@ -180,6 +180,7 @@ public class ParseDataSource implements DataSource {
     }
 
 
+    //remove duplicates from the list of previous users taken from the Audit table.
     private ArrayList<String> Dedupe(List<ParseObject> inList)
     {
         ArrayList<String> allNames = new ArrayList<String>();

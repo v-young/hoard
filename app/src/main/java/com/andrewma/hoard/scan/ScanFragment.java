@@ -66,9 +66,11 @@ public class ScanFragment extends Fragment {
     @InjectView(R.id.this_device) Button mThisDeviceButton;
     @InjectView(R.id.version) TextView mVersion;
     @InjectView(R.id.spinnerRecent) Spinner mRecentSpinner;
+    @InjectView(R.id.checkOut) TextView mCheckOut;
 
     private String mScannedDeviceModel;
     private String mScannedDeviceSerial;
+    private String mCheckedOutDate;
     private String mScannedUserEmail;
     private ParseDataSource ds = new ParseDataSource();
     private ArrayList<String> userList = ds.GetAllUsers();
@@ -116,6 +118,7 @@ public class ScanFragment extends Fragment {
         mRecentSpinner.setAdapter(aUserList);
 
         //mVersion.setText(BuildConfig.VERSION_CODE);
+        //mUserEmail.setText("Enter e-mail or select from list");
 
         return view;
     }
@@ -196,13 +199,13 @@ public class ScanFragment extends Fragment {
             mCheckinButton.setVisibility(View.GONE);
 
             mProgressBar.setVisibility(View.VISIBLE);
+            mCheckOut.setText(null);
 
             new CheckInTask().execute(new Device(mScannedDeviceModel, mScannedDeviceSerial));
         }
     }
 
     @OnItemSelected(R.id.spinnerRecent)
-//    @OnTouch(R.id.spinnerRecent)
     void spinnerClick()
     {
         mUserEmail.setText(mRecentSpinner.getSelectedItem().toString());
@@ -269,6 +272,7 @@ public class ScanFragment extends Fragment {
             // Override the value using the value from parse
             mScannedDeviceModel = device.model;
             mScannedDeviceSerial = device.serial;
+            mCheckedOutDate = device.checkedOutAt.toString();
             mDeviceModelTextView.setText(mScannedDeviceModel);
             mDeviceSerialTextView.setText(mScannedDeviceSerial);
 
@@ -278,6 +282,7 @@ public class ScanFragment extends Fragment {
                 mRecentSpinner.setEnabled(true);
             } else {
                 mUserEmail.setText(device.checkedOutTo);
+                mCheckOut.setText("Checked out at " + mCheckedOutDate);
                 mCheckoutButton.setVisibility(View.GONE);
                 mCheckinButton.setVisibility(View.VISIBLE);
                 mRecentSpinner.setEnabled(false);
