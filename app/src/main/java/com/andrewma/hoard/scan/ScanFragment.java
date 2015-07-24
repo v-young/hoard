@@ -18,28 +18,36 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.Spinner;
 
 import com.andrewma.hoard.HoardApplication;
 import com.andrewma.hoard.R;
 import com.andrewma.hoard.data.Device;
+import com.andrewma.hoard.data.parse.ParseDataSource;
 import com.andrewma.hoard.tags.DeviceTag;
 import com.andrewma.hoard.tags.Tag;
 import com.andrewma.hoard.tags.UserTag;
 import com.bluelinelabs.logansquare.LoganSquare;
 
+
 import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.ArrayList;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import butterknife.OnClick;
+import butterknife.OnItemClick;
+import butterknife.OnItemSelected;
+//import butterknife.OnTouch;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -57,10 +65,13 @@ public class ScanFragment extends Fragment {
     @InjectView(R.id.img_button_scan) ImageButton mScanButton;
     @InjectView(R.id.this_device) Button mThisDeviceButton;
     @InjectView(R.id.version) TextView mVersion;
+    @InjectView(R.id.spinnerRecent) Spinner mRecentSpinner;
 
     private String mScannedDeviceModel;
     private String mScannedDeviceSerial;
     private String mScannedUserEmail;
+    private ParseDataSource ds = new ParseDataSource();
+    private ArrayList<String> userList = ds.GetAllUsers();
 
     public ScanFragment() {
         // Required empty public constructor
@@ -70,7 +81,6 @@ public class ScanFragment extends Fragment {
     public void onCreate(Bundle savedBundle) {
         super.onCreate(savedBundle);
         setHasOptionsMenu(true);
-
     }
 
     @Override
@@ -98,6 +108,12 @@ public class ScanFragment extends Fragment {
         ButterKnife.inject(this, view);
 
         getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
+
+        mRecentSpinner.setEnabled(true);
+        mRecentSpinner.setPrompt("Select User");
+
+        ArrayAdapter<String>aUserList = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_spinner_item, userList);
+        mRecentSpinner.setAdapter(aUserList);
 
         //mVersion.setText(BuildConfig.VERSION_CODE);
 
@@ -172,6 +188,7 @@ public class ScanFragment extends Fragment {
         }
     }
 
+
     @OnClick(R.id.checkin_button)
     void checkinClick() {
         if(!TextUtils.isEmpty(mScannedDeviceSerial)) {
@@ -183,6 +200,14 @@ public class ScanFragment extends Fragment {
             new CheckInTask().execute(new Device(mScannedDeviceModel, mScannedDeviceSerial));
         }
     }
+
+    @OnItemSelected(R.id.spinnerRecent)
+//    @OnTouch(R.id.spinnerRecent)
+    void spinnerClick()
+    {
+        mUserEmail.setText(mRecentSpinner.getSelectedItem().toString());
+    }
+
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent intent) {
