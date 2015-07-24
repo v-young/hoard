@@ -275,10 +275,12 @@ public class ScanFragment extends Fragment {
             if(TextUtils.isEmpty(device.checkedOutTo)) {
                 mCheckoutButton.setVisibility(View.VISIBLE);
                 mCheckinButton.setVisibility(View.GONE);
+                mRecentSpinner.setEnabled(true);
             } else {
                 mUserEmail.setText(device.checkedOutTo);
                 mCheckoutButton.setVisibility(View.GONE);
                 mCheckinButton.setVisibility(View.VISIBLE);
+                mRecentSpinner.setEnabled(false);
             }
         }
     }
@@ -313,7 +315,7 @@ public class ScanFragment extends Fragment {
             Toast.makeText(getActivity(), "Device is checked out successfully!", Toast.LENGTH_SHORT).show();
             mCheckoutButton.setVisibility(View.GONE);
             mCheckinButton.setVisibility(View.VISIBLE);
-
+            mRecentSpinner.setEnabled(false);
             mProgressBar.setVisibility(View.GONE);
         }
     }
@@ -328,10 +330,10 @@ public class ScanFragment extends Fragment {
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            Toast.makeText(getActivity(), "Device is now checkd in!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getActivity(), "Device is now checked in!", Toast.LENGTH_SHORT).show();
             mCheckoutButton.setVisibility(View.VISIBLE);
             mCheckinButton.setVisibility(View.GONE);
-
+            mRecentSpinner.setEnabled(true);
             mProgressBar.setVisibility(View.GONE);
         }
     }
