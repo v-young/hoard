@@ -23,4 +23,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         tools:text="Jan 1"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:id="@+id/checkoutDate" />
 </LinearLayout>

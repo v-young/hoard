@@ -32,12 +32,20 @@ class DeviceListAdapter extends ArrayAdapter<Device> {
         final TextView name = (TextView) rowView.findViewById(R.id.name);
         final TextView serial = (TextView) rowView.findViewById(R.id.serial);
         final TextView checkedOut = (TextView) rowView.findViewById(R.id.checkedOut);
+        final TextView checkoutDate = (TextView) rowView.findViewById(R.id.checkoutDate);
 
         final Device device = mDevices.get(position);
         name.setText(device.model);
         serial.setText(device.serial);
-        checkedOut.setText(device.checkedOutTo);
-
+        if (device.checkedOutTo != null) {
+            checkedOut.setText(device.checkedOutTo);
+            checkoutDate.setText("Checked out: " + device.checkedOutAt);
+        }
+        else {
+            checkedOut.setHeight(1);
+            checkoutDate.setText (null);
+            checkoutDate.setHeight(1);
+        }
         return rowView;
     }
 
