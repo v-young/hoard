@@ -63,6 +63,7 @@ public class ParseDataSource implements DataSource {
     @Override
     public List<Device> getAllDevices() {
         final ParseQuery<ParseObject> query = ParseQuery.getQuery(DEVICES_CLASS_NAME);
+        query.orderByDescending(DEVICES_CHECKED_OUT_AT); //Show the most recently checked out devices first on the All Devices list
         try {
             final List<ParseObject> parseDevices = query.find();
             if(parseDevices.size() == 0) {
