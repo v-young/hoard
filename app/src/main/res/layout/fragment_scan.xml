@@ -33,11 +33,18 @@
             style="@style/Base.TextAppearance.AppCompat.Medium"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
+
         <TextView
             android:id="@+id/device_serial"
             style="@style/Base.TextAppearance.AppCompat.Medium"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:id="@+id/checkOut" />
 
     </LinearLayout>
 
@@ -81,6 +88,17 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
+    <Spinner
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/spinnerRecent"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:clickable="true"
+        android:spinnerMode="dropdown"
+        />
+
     <ImageButton
         android:layout_width="150dp"
         android:layout_height="150dp"
@@ -99,6 +117,7 @@
             android:text="Small Text"
             android:id="@+id/version"
             android:layout_gravity="right" />
+
     </RelativeLayout>
 
 </LinearLayout>

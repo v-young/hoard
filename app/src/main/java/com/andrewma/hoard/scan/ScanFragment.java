@@ -18,28 +18,36 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.Spinner;
 
 import com.andrewma.hoard.HoardApplication;
 import com.andrewma.hoard.R;
 import com.andrewma.hoard.data.Device;
+import com.andrewma.hoard.data.parse.ParseDataSource;
 import com.andrewma.hoard.tags.DeviceTag;
 import com.andrewma.hoard.tags.Tag;
 import com.andrewma.hoard.tags.UserTag;
 import com.bluelinelabs.logansquare.LoganSquare;
 
+
 import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.ArrayList;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import butterknife.OnClick;
+import butterknife.OnItemClick;
+import butterknife.OnItemSelected;
+//import butterknife.OnTouch;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -57,10 +65,15 @@ public class ScanFragment extends Fragment {
     @InjectView(R.id.img_button_scan) ImageButton mScanButton;
     @InjectView(R.id.this_device) Button mThisDeviceButton;
     @InjectView(R.id.version) TextView mVersion;
+    @InjectView(R.id.spinnerRecent) Spinner mRecentSpinner;
+    @InjectView(R.id.checkOut) TextView mCheckOut;
 
     private String mScannedDeviceModel;
     private String mScannedDeviceSerial;
+    private String mCheckedOutDate;
     private String mScannedUserEmail;
+    private ParseDataSource ds = new ParseDataSource();
+    private ArrayList<String> userList = ds.GetAllUsers();
 
     public ScanFragment() {
         // Required empty public constructor
@@ -70,7 +83,6 @@ public class ScanFragment extends Fragment {
     public void onCreate(Bundle savedBundle) {
         super.onCreate(savedBundle);
         setHasOptionsMenu(true);
-
     }
 
     @Override
@@ -99,7 +111,14 @@ public class ScanFragment extends Fragment {
 
         getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
 
+        mRecentSpinner.setEnabled(true);
+        mRecentSpinner.setPrompt("Select User");
+
+        ArrayAdapter<String>aUserList = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_spinner_item, userList);
+        mRecentSpinner.setAdapter(aUserList);
+
         //mVersion.setText(BuildConfig.VERSION_CODE);
+        //mUserEmail.setText("Enter e-mail or select from list");
 
         return view;
     }
@@ -172,6 +191,7 @@ public class ScanFragment extends Fragment {
         }
     }
 
+
     @OnClick(R.id.checkin_button)
     void checkinClick() {
         if(!TextUtils.isEmpty(mScannedDeviceSerial)) {
@@ -179,10 +199,18 @@ public class ScanFragment extends Fragment {
             mCheckinButton.setVisibility(View.GONE);
 
             mProgressBar.setVisibility(View.VISIBLE);
+            mCheckOut.setText(null);
 
             new CheckInTask().execute(new Device(mScannedDeviceModel, mScannedDeviceSerial));
         }
     }
+
+    @OnItemSelected(R.id.spinnerRecent)
+    void spinnerClick()
+    {
+        mUserEmail.setText(mRecentSpinner.getSelectedItem().toString());
+    }
+
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent intent) {
@@ -244,16 +272,22 @@ public class ScanFragment extends Fragment {
             // Override the value using the value from parse
             mScannedDeviceModel = device.model;
             mScannedDeviceSerial = device.serial;
+            if (device.checkedOutAt != null) {
+                mCheckedOutDate = device.checkedOutAt.toString();
+            }
             mDeviceModelTextView.setText(mScannedDeviceModel);
             mDeviceSerialTextView.setText(mScannedDeviceSerial);
 
             if(TextUtils.isEmpty(device.checkedOutTo)) {
                 mCheckoutButton.setVisibility(View.VISIBLE);
                 mCheckinButton.setVisibility(View.GONE);
+                mRecentSpinner.setEnabled(true);
             } else {
                 mUserEmail.setText(device.checkedOutTo);
+                mCheckOut.setText("Checked out at " + mCheckedOutDate);
                 mCheckoutButton.setVisibility(View.GONE);
                 mCheckinButton.setVisibility(View.VISIBLE);
+                mRecentSpinner.setEnabled(false);
             }
         }
     }
@@ -288,7 +322,7 @@ public class ScanFragment extends Fragment {
             Toast.makeText(getActivity(), "Device is checked out successfully!", Toast.LENGTH_SHORT).show();
             mCheckoutButton.setVisibility(View.GONE);
             mCheckinButton.setVisibility(View.VISIBLE);
-
+            mRecentSpinner.setEnabled(false);
             mProgressBar.setVisibility(View.GONE);
         }
     }
@@ -303,10 +337,10 @@ public class ScanFragment extends Fragment {
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            Toast.makeText(getActivity(), "Device is now checkd in!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getActivity(), "Device is now checked in!", Toast.LENGTH_SHORT).show();
             mCheckoutButton.setVisibility(View.VISIBLE);
             mCheckinButton.setVisibility(View.GONE);
-
+            mRecentSpinner.setEnabled(true);
             mProgressBar.setVisibility(View.GONE);
         }
     }
