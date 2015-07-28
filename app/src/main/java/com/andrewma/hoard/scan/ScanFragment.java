@@ -272,7 +272,9 @@ public class ScanFragment extends Fragment {
             // Override the value using the value from parse
             mScannedDeviceModel = device.model;
             mScannedDeviceSerial = device.serial;
-            mCheckedOutDate = device.checkedOutAt.toString();
+            if (device.checkedOutAt != null) {
+                mCheckedOutDate = device.checkedOutAt.toString();
+            }
             mDeviceModelTextView.setText(mScannedDeviceModel);
             mDeviceSerialTextView.setText(mScannedDeviceSerial);
 
