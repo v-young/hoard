@@ -10,6 +10,7 @@ public class Device {
 
     public Device() { }
 
+
     public Device(String model, String serial) {
         this.model = model;
         this.serial = serial;

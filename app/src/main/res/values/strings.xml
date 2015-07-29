@@ -3,7 +3,7 @@
 
     <string name="title_device_checkout">Device Checkout/In</string>
     <string name="title_device_list">Device List</string>
-    <string name="title_section3">Section 3</string>
+    <string name="title_section3">Devices Checked Out</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
